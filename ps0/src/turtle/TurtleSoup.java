@@ -4,7 +4,9 @@
 package turtle;
 
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class TurtleSoup {
 
@@ -14,11 +16,17 @@ public class TurtleSoup {
      * @param turtle the turtle context
      * @param sideLength length of each side
      */
+    private static final double straightAngle = 180.0;
+    private static final double fullTurnAngle = 360.0;
+    
     public static void drawSquare(Turtle turtle, int sideLength) {
+        final double squareInnerAngle = 90.0;
+        final double turnAngle = TurtleSoup.straightAngle - squareInnerAngle;
         for (int i = 0; i<4; i++){
+            
             turtle.forward(sideLength);
-            turtle.turn(90); //this 90 is a magic number, please add an explanation or a suitable variable name
-        }
+            turtle.turn(turnAngle); 
+            }
             
     }
 
@@ -32,7 +40,7 @@ public class TurtleSoup {
      * @return angle in degrees, where 0 <= angle < 360
      */
     public static double calculateRegularPolygonAngle(int sides) {
-        return (Double.valueOf(180)*Double.valueOf(sides-2)/Double.valueOf(sides));  
+        return (TurtleSoup.straightAngle*Double.valueOf(sides-2)/Double.valueOf(sides));  
     }
 
     /**
@@ -46,8 +54,9 @@ public class TurtleSoup {
      * @return the integer number of sides
      */
     public static int calculatePolygonSidesFromAngle(double angle) {
-        double result = Double.valueOf(360)/(Double.valueOf(180)- angle); 
-        return (int)Math.round(result); //this variable is named result but we are not returning result, we are instead making a computation based on it.
+        
+        final double sidesDecimal = TurtleSoup.fullTurnAngle/(TurtleSoup.straightAngle- angle); 
+        return (int)Math.round(sidesDecimal); 
     }
 
     /**
@@ -60,12 +69,12 @@ public class TurtleSoup {
      * @param sideLength length of each side
      */
     public static void drawRegularPolygon(Turtle turtle, int sides, int sideLength) {
-        final double angle = Double.valueOf(180) - calculateRegularPolygonAngle(sides); // the name angle is too generic and combined to the magic number 180 it isn't clear what this angle is meant to be.
+        final double turnAngle = TurtleSoup.straightAngle - calculateRegularPolygonAngle(sides);
         
         
         for (int i = 0; i< sides; i++){
             turtle.forward(sideLength);
-            turtle.turn(angle);
+            turtle.turn(turnAngle);
         }
     }
 
@@ -94,8 +103,12 @@ public class TurtleSoup {
         final int xChange = targetX - currentX;
         double targetAngle = Math.toDegrees(Math.atan2(xChange, yChange));
         
+        /*Since we want to return a positive angle we increment the target angle by a full turn 
+         * of 360 degrees until it is larger or equal to the current heading; adding 360 degrees 
+         * to a direction results in pointing in the same direction so the angles are equivalent.
+         */
         while (currentHeading > targetAngle){
-            targetAngle += 360; // why is 360 being added here repeatedly?
+            targetAngle += TurtleSoup.fullTurnAngle;
         }
         return targetAngle - currentHeading;
     }
@@ -115,13 +128,13 @@ public class TurtleSoup {
      *         otherwise of size (# of points) - 1
      */
     public static List<Double> calculateHeadings(List<Integer> xCoords, List<Integer> yCoords) {
-        List<Double> result = new ArrayList<Double>();
-        double angle = 0.0; //the name angle is too general, hard to tell how this will be used
+        List<Double> listOfHeadings = new ArrayList<Double>();
+        double currentHeading = 0.0; 
         for (int i = 0; i < xCoords.size() - 1; i++){
-            angle = calculateHeadingToPoint(angle, xCoords.get(i), yCoords.get(i), xCoords.get(i+1), yCoords.get(i+1)); //the function calculates a heading but we are setting the angle to it. Seems a bit confusing.
-            result.add(angle);
+            currentHeading = calculateHeadingToPoint(currentHeading, xCoords.get(i), yCoords.get(i), xCoords.get(i+1), yCoords.get(i+1)); //the function calculates a heading but we are setting the angle to it. Seems a bit confusing.
+            listOfHeadings.add(currentHeading);
         }
-        return result;
+        return listOfHeadings;
     }
 
     /**
@@ -130,23 +143,36 @@ public class TurtleSoup {
      * Many interesting images can be drawn using the simple implementation of a turtle.  For this
      * function, draw something interesting; the complexity can be as little or as much as you want.
      * 
+     * Personal art consists of calculating the first 200 hail stone paths. For each even
+     * member moving forward by 6 pixels, and for each odd member
+     * turning the turtle by approximately the golden angle.
+     * 
+     * See https://en.wikipedia.org/wiki/Golden_angle for an overview of the golden angle.
+     * 
      * @param turtle the turtle context
      */
     public static void drawPersonalArt(Turtle turtle) {
-        //specifications don't explain what this does.
-        //checks the hail stone sequence from 2 to 200
-        for (int i = 2; i<200; i++){ //what is 200 in this instance?
-            int drop = i; //name drop has no obvious meaning here
-            final double goldenAngle = 137.5077640500378546463487; //this final is possibly being set each time inside the for loop, maybe should be outside the loop? this is possibly a constant but is not in all upper case
-            while (drop != 1){
-                if (drop % 2 == 0){
-                    drop = drop/2;
-                    turtle.forward(6); //why 6?
-                    //moves forward when the hail stone is dropping
+        final double goldenAngle = 137.5077640500378546463487;
+        final double turnAngle = goldenAngle;
+        final int stepsForward = 6;
+        
+        int hailStone;
+        
+        for (int i = 1; i<200; i++){ 
+            hailStone = i; 
+            
+             
+            while (hailStone != 1){
+                
+                if (hailStone % 2 == 0){
+                    
+                    hailStone = hailStone/2;
+                    turtle.forward(stepsForward);
+                    
                 } else {
-                    drop = 3*drop +1;
-                    turtle.turn(goldenAngle);
-                    //turns by the golden angle when the hail stone is bouncing up
+                    hailStone = 3*hailStone +1;
+                    turtle.turn(turnAngle);
+                    
                 }
             }
             
